@@ -1,0 +1,16 @@
+avg neighbours/atom: short=21.6 long=95.4
+mode=gated rc=5.0 rl=24.0 params=97474 device=cuda
+epoch=0 time_h=0.02188 epoch_s=78.75 lr=0.0005 lam=0 train_loss=617.7 n_short_per_mol=2596 n_long_per_mol=1.121e+04 val_e_mae=422.6 val_f_mae=14.18 val_gate_mean=0.9942 val_gate_frac>0.5=1 val_gate_frac>0.1=1 val_gate_frac>0.01=1
+[W1110 19:48:03.850327455 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 132120576 bytes (free: 64749568, total: 15637086208).
+epoch=5 time_h=0.1336 epoch_s=79.9 lr=0.0004995 lam=0.3 train_loss=216 n_short_per_mol=2616 n_long_per_mol=1.119e+04 val_e_mae=105.9 val_f_mae=10.42 val_gate_mean=0.9294 val_gate_frac>0.5=0.947 val_gate_frac>0.1=0.9992 val_gate_frac>0.01=1
+[W1110 19:50:15.160088171 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 132120576 bytes (free: 87818240, total: 15637086208).
+epoch=10 time_h=0.2443 epoch_s=78.96 lr=0.0004983 lam=0.6 train_loss=159.9 n_short_per_mol=2498 n_long_per_mol=1.131e+04 val_e_mae=301.2 val_f_mae=9.174 val_gate_mean=0.8881 val_gate_frac>0.5=0.889 val_gate_frac>0.1=0.9925 val_gate_frac>0.01=0.9999
+epoch=15 time_h=0.3555 epoch_s=79.81 lr=0.0004965 lam=0.9 train_loss=137 n_short_per_mol=2543 n_long_per_mol=1.126e+04 val_e_mae=506.7 val_f_mae=8.216 val_gate_mean=0.8718 val_gate_frac>0.5=0.868 val_gate_frac>0.1=0.9591 val_gate_frac>0.01=0.9938
+epoch=20 time_h=0.4662 epoch_s=78.96 lr=0.000494 lam=1.2 train_loss=99.13 n_short_per_mol=2577 n_long_per_mol=1.123e+04 val_e_mae=144.4 val_f_mae=7.268 val_gate_mean=0.8714 val_gate_frac>0.5=0.8676 val_gate_frac>0.1=0.9557 val_gate_frac>0.01=0.9921
+epoch=25 time_h=0.5772 epoch_s=80.09 lr=0.0004908 lam=1.5 train_loss=82.13 n_short_per_mol=2549 n_long_per_mol=1.126e+04 val_e_mae=13.1 val_f_mae=6.644 val_gate_mean=0.8699 val_gate_frac>0.5=0.8676 val_gate_frac>0.1=0.9466 val_gate_frac>0.01=0.9878
+epoch=30 time_h=0.6883 epoch_s=79.67 lr=0.000487 lam=1.8 train_loss=70.72 n_short_per_mol=2539 n_long_per_mol=1.127e+04 val_e_mae=15.2 val_f_mae=6.176 val_gate_mean=0.8705 val_gate_frac>0.5=0.872 val_gate_frac>0.1=0.9447 val_gate_frac>0.01=0.986
+epoch=35 time_h=0.7992 epoch_s=79.54 lr=0.0004825 lam=2.1 train_loss=63.99 n_short_per_mol=2459 n_long_per_mol=1.135e+04 val_e_mae=121.1 val_f_mae=5.869 val_gate_mean=0.8475 val_gate_frac>0.5=0.849 val_gate_frac>0.1=0.9283 val_gate_frac>0.01=0.9748
+epoch=40 time_h=0.9106 epoch_s=80.5 lr=0.0004774 lam=2.4 train_loss=57.43 n_short_per_mol=2538 n_long_per_mol=1.127e+04 val_e_mae=47.72 val_f_mae=5.536 val_gate_mean=0.8495 val_gate_frac>0.5=0.8501 val_gate_frac>0.1=0.9311 val_gate_frac>0.01=0.9714
+[W1110 20:39:56.197479788 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 132120576 bytes (free: 92012544, total: 15637086208).
+[W1110 20:40:48.163422539 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 29097984, total: 15637086208).
+epoch=45 time_h=1.021 epoch_s=79.79 lr=0.0004716 lam=2.7 train_loss=53.99 n_short_per_mol=2501 n_long_per_mol=1.13e+04 val_e_mae=72.28 val_f_mae=5.386 val_gate_mean=0.8452 val_gate_frac>0.5=0.8453 val_gate_frac>0.1=0.9312 val_gate_frac>0.01=0.969

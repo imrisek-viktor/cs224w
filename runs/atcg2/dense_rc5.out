@@ -1,0 +1,20 @@
+avg neighbours/atom: short=21.6 long=95.4
+mode=dense rc=5.0 rl=24.0 params=85953 device=cuda
+epoch=0 time_h=0.01743 epoch_s=62.73 lr=0.0005 lam=0 train_loss=621.4 n_short_per_mol=2505 n_long_per_mol=1.13e+04 val_e_mae=351.6 val_f_mae=14.14
+[W1110 19:43:58.547693909 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 37486592, total: 15637086208).
+epoch=5 time_h=0.1037 epoch_s=61.31 lr=0.0004995 lam=0 train_loss=218 n_short_per_mol=2522 n_long_per_mol=1.128e+04 val_e_mae=44.06 val_f_mae=10.46
+epoch=10 time_h=0.1898 epoch_s=61.37 lr=0.0004983 lam=0 train_loss=131.8 n_short_per_mol=2488 n_long_per_mol=1.132e+04 val_e_mae=60.71 val_f_mae=8.31
+epoch=15 time_h=0.2756 epoch_s=61.4 lr=0.0004965 lam=0 train_loss=92.82 n_short_per_mol=2492 n_long_per_mol=1.131e+04 val_e_mae=143.2 val_f_mae=7.166
+[W1110 19:57:23.485407199 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 8126464, total: 15637086208).
+epoch=20 time_h=0.3615 epoch_s=61.61 lr=0.000494 lam=0 train_loss=74.99 n_short_per_mol=2479 n_long_per_mol=1.133e+04 val_e_mae=13.53 val_f_mae=6.462
+[W1110 20:06:41.702660885 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 22806528, total: 15637086208).
+epoch=25 time_h=0.4475 epoch_s=61.66 lr=0.0004908 lam=0 train_loss=62.77 n_short_per_mol=2457 n_long_per_mol=1.135e+04 val_e_mae=68.62 val_f_mae=5.904
+[W1110 20:07:43.356457298 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 47972352, total: 15637086208).
+epoch=30 time_h=0.5336 epoch_s=61.53 lr=0.000487 lam=0 train_loss=53.95 n_short_per_mol=2514 n_long_per_mol=1.129e+04 val_e_mae=138.6 val_f_mae=5.54
+epoch=35 time_h=0.6199 epoch_s=62.45 lr=0.0004825 lam=0 train_loss=48.13 n_short_per_mol=2587 n_long_per_mol=1.122e+04 val_e_mae=91.91 val_f_mae=5.168
+epoch=40 time_h=0.7058 epoch_s=62.74 lr=0.0004774 lam=0 train_loss=46.02 n_short_per_mol=2629 n_long_per_mol=1.118e+04 val_e_mae=27.01 val_f_mae=4.933
+epoch=45 time_h=0.7918 epoch_s=60.92 lr=0.0004716 lam=0 train_loss=39.4 n_short_per_mol=2522 n_long_per_mol=1.128e+04 val_e_mae=39.84 val_f_mae=4.753
+[W1110 20:29:24.045126893 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 24903680, total: 15637086208).
+epoch=50 time_h=0.878 epoch_s=61.55 lr=0.0004653 lam=0 train_loss=37.89 n_short_per_mol=2540 n_long_per_mol=1.127e+04 val_e_mae=22.26 val_f_mae=4.546
+epoch=55 time_h=0.9639 epoch_s=61.36 lr=0.0004583 lam=0 train_loss=34.08 n_short_per_mol=2541 n_long_per_mol=1.126e+04 val_e_mae=61.45 val_f_mae=4.452
+[W1110 20:39:42.564734310 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 48234496 bytes (free: 37486592, total: 15637086208).

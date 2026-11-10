@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.DS_Store
+*.tmp
+# original downloads (large; regenerate data/*.npz with src/prep_md22.py)
+*.xyz
+data/raw/

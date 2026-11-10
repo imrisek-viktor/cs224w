@@ -1,0 +1,18 @@
+avg neighbours/atom: short=12.4 long=46.6
+mode=cutoff rc=4.0 rl=20.0 params=62913 device=cpu
+epoch=0 time_h=0.007434 epoch_s=26.76 lr=0.0005 lam=0 train_loss=486.8 n_short_per_mol=729.5 n_long_per_mol=0 val_e_mae=12.91 val_f_mae=11.9
+epoch=5 time_h=0.04967 epoch_s=30.2 lr=0.0004999 lam=0 train_loss=100.5 n_short_per_mol=718.8 n_long_per_mol=0 val_e_mae=144.9 val_f_mae=7.023
+epoch=10 time_h=0.09465 epoch_s=34.19 lr=0.0004996 lam=0 train_loss=73.84 n_short_per_mol=744.5 n_long_per_mol=0 val_e_mae=129.9 val_f_mae=6.127
+epoch=15 time_h=0.1425 epoch_s=36.39 lr=0.0004991 lam=0 train_loss=66.93 n_short_per_mol=746.2 n_long_per_mol=0 val_e_mae=194.8 val_f_mae=5.527
+epoch=20 time_h=0.1939 epoch_s=37.67 lr=0.0004985 lam=0 train_loss=43.49 n_short_per_mol=737.2 n_long_per_mol=0 val_e_mae=24.65 val_f_mae=4.838
+epoch=25 time_h=0.2462 epoch_s=38.94 lr=0.0004977 lam=0 train_loss=37.75 n_short_per_mol=753.8 n_long_per_mol=0 val_e_mae=53.59 val_f_mae=4.399
+epoch=30 time_h=0.3001 epoch_s=39.43 lr=0.0004967 lam=0 train_loss=33.45 n_short_per_mol=723.8 n_long_per_mol=0 val_e_mae=4.631 val_f_mae=4.15
+epoch=35 time_h=0.3553 epoch_s=40.23 lr=0.0004956 lam=0 train_loss=31.24 n_short_per_mol=745.5 n_long_per_mol=0 val_e_mae=10.79 val_f_mae=4.007
+epoch=40 time_h=0.4126 epoch_s=41.77 lr=0.0004943 lam=0 train_loss=30.01 n_short_per_mol=724 n_long_per_mol=0 val_e_mae=6.534 val_f_mae=3.87
+epoch=45 time_h=0.4668 epoch_s=38.7 lr=0.0004928 lam=0 train_loss=30.82 n_short_per_mol=709.2 n_long_per_mol=0 val_e_mae=253.4 val_f_mae=3.985
+epoch=50 time_h=0.5204 epoch_s=38.78 lr=0.0004912 lam=0 train_loss=23.08 n_short_per_mol=756.5 n_long_per_mol=0 val_e_mae=29.83 val_f_mae=3.622
+epoch=55 time_h=0.5763 epoch_s=41.47 lr=0.0004894 lam=0 train_loss=21.96 n_short_per_mol=737.8 n_long_per_mol=0 val_e_mae=31.12 val_f_mae=3.505
+epoch=60 time_h=0.6365 epoch_s=44.89 lr=0.0004874 lam=0 train_loss=20.42 n_short_per_mol=719.8 n_long_per_mol=0 val_e_mae=6.447 val_f_mae=3.362
+epoch=65 time_h=0.6946 epoch_s=41.05 lr=0.0004852 lam=0 train_loss=18.93 n_short_per_mol=740.5 n_long_per_mol=0 val_e_mae=17.14 val_f_mae=3.213
+epoch=70 time_h=0.7537 epoch_s=49.33 lr=0.000483 lam=0 train_loss=18.36 n_short_per_mol=718 n_long_per_mol=0 val_e_mae=13 val_f_mae=3.16
+TEST {'e_mae': 6.950445272827149, 'f_mae': 3.1293877213541665, 'best_val_f_mae': 3.092698025173611, 'epochs': 73, 'params': 62913, 'norms': (12.36966609954834, 46.62033462524414)}

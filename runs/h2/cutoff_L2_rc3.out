@@ -1,0 +1,31 @@
+avg neighbours/atom: short=7.4 long=51.6
+mode=cutoff rc=3.0 rl=20.0 params=43073 device=cpu
+epoch=0 time_h=0.003527 epoch_s=12.7 lr=0.0005 lam=0 train_loss=484.5 n_short_per_mol=448 n_long_per_mol=0 val_e_mae=16.95 val_f_mae=12.36
+epoch=5 time_h=0.02463 epoch_s=15.04 lr=0.0004999 lam=0 train_loss=92.43 n_short_per_mol=443.5 n_long_per_mol=0 val_e_mae=182.7 val_f_mae=6.953
+epoch=10 time_h=0.04565 epoch_s=14.89 lr=0.0004996 lam=0 train_loss=64.38 n_short_per_mol=440 n_long_per_mol=0 val_e_mae=9.702 val_f_mae=5.942
+epoch=15 time_h=0.06796 epoch_s=17.05 lr=0.0004991 lam=0 train_loss=56.41 n_short_per_mol=446 n_long_per_mol=0 val_e_mae=21.84 val_f_mae=5.517
+epoch=20 time_h=0.09169 epoch_s=17.88 lr=0.0004985 lam=0 train_loss=46.47 n_short_per_mol=439.8 n_long_per_mol=0 val_e_mae=39.12 val_f_mae=4.99
+epoch=25 time_h=0.1164 epoch_s=17.67 lr=0.0004977 lam=0 train_loss=40.09 n_short_per_mol=451 n_long_per_mol=0 val_e_mae=6.755 val_f_mae=4.601
+epoch=30 time_h=0.1417 epoch_s=19.13 lr=0.0004967 lam=0 train_loss=38.11 n_short_per_mol=447.8 n_long_per_mol=0 val_e_mae=55.89 val_f_mae=4.365
+epoch=35 time_h=0.1682 epoch_s=19.3 lr=0.0004956 lam=0 train_loss=34.89 n_short_per_mol=442 n_long_per_mol=0 val_e_mae=64.9 val_f_mae=4.25
+epoch=40 time_h=0.1959 epoch_s=20.18 lr=0.0004943 lam=0 train_loss=31.29 n_short_per_mol=445.8 n_long_per_mol=0 val_e_mae=19.87 val_f_mae=4.099
+epoch=45 time_h=0.2235 epoch_s=19.32 lr=0.0004928 lam=0 train_loss=32.37 n_short_per_mol=445.5 n_long_per_mol=0 val_e_mae=79.86 val_f_mae=4.132
+epoch=50 time_h=0.2511 epoch_s=19.82 lr=0.0004912 lam=0 train_loss=27.75 n_short_per_mol=443.2 n_long_per_mol=0 val_e_mae=14.55 val_f_mae=4.008
+epoch=55 time_h=0.2793 epoch_s=20.69 lr=0.0004894 lam=0 train_loss=27.61 n_short_per_mol=453.5 n_long_per_mol=0 val_e_mae=4.563 val_f_mae=3.811
+epoch=60 time_h=0.3079 epoch_s=21.33 lr=0.0004874 lam=0 train_loss=25.58 n_short_per_mol=447.2 n_long_per_mol=0 val_e_mae=5.484 val_f_mae=3.785
+epoch=65 time_h=0.3371 epoch_s=21.45 lr=0.0004852 lam=0 train_loss=26.14 n_short_per_mol=444.8 n_long_per_mol=0 val_e_mae=30.19 val_f_mae=3.666
+epoch=70 time_h=0.3674 epoch_s=21.94 lr=0.000483 lam=0 train_loss=23.36 n_short_per_mol=442.8 n_long_per_mol=0 val_e_mae=3.652 val_f_mae=3.605
+epoch=75 time_h=0.3974 epoch_s=21.72 lr=0.0004805 lam=0 train_loss=24.13 n_short_per_mol=441.2 n_long_per_mol=0 val_e_mae=20.92 val_f_mae=3.563
+epoch=80 time_h=0.4269 epoch_s=20.78 lr=0.0004779 lam=0 train_loss=21.62 n_short_per_mol=445.2 n_long_per_mol=0 val_e_mae=8.011 val_f_mae=3.464
+epoch=85 time_h=0.4553 epoch_s=20.37 lr=0.0004751 lam=0 train_loss=22.06 n_short_per_mol=442 n_long_per_mol=0 val_e_mae=35.44 val_f_mae=3.506
+epoch=90 time_h=0.4836 epoch_s=20.15 lr=0.0004722 lam=0 train_loss=19.36 n_short_per_mol=441 n_long_per_mol=0 val_e_mae=9.774 val_f_mae=3.439
+epoch=95 time_h=0.5118 epoch_s=20.17 lr=0.0004691 lam=0 train_loss=18.87 n_short_per_mol=446 n_long_per_mol=0 val_e_mae=17.65 val_f_mae=3.294
+epoch=100 time_h=0.5409 epoch_s=20.94 lr=0.0004659 lam=0 train_loss=18.91 n_short_per_mol=439.2 n_long_per_mol=0 val_e_mae=8.42 val_f_mae=3.152
+epoch=105 time_h=0.57 epoch_s=20.53 lr=0.0004625 lam=0 train_loss=17.53 n_short_per_mol=446.5 n_long_per_mol=0 val_e_mae=9.7 val_f_mae=3.139
+epoch=110 time_h=0.6011 epoch_s=22.87 lr=0.000459 lam=0 train_loss=16.89 n_short_per_mol=444.5 n_long_per_mol=0 val_e_mae=17.6 val_f_mae=3.225
+epoch=115 time_h=0.6341 epoch_s=24.02 lr=0.0004554 lam=0 train_loss=16.92 n_short_per_mol=447.2 n_long_per_mol=0 val_e_mae=27.45 val_f_mae=3.034
+epoch=120 time_h=0.6656 epoch_s=21.43 lr=0.0004516 lam=0 train_loss=15.87 n_short_per_mol=441 n_long_per_mol=0 val_e_mae=10.97 val_f_mae=2.958
+epoch=125 time_h=0.6957 epoch_s=21.06 lr=0.0004476 lam=0 train_loss=15.38 n_short_per_mol=448 n_long_per_mol=0 val_e_mae=14.83 val_f_mae=2.982
+epoch=130 time_h=0.7256 epoch_s=21.78 lr=0.0004436 lam=0 train_loss=15.03 n_short_per_mol=449.8 n_long_per_mol=0 val_e_mae=22.96 val_f_mae=2.889
+epoch=135 time_h=0.7593 epoch_s=26.29 lr=0.0004394 lam=0 train_loss=15.25 n_short_per_mol=441 n_long_per_mol=0 val_e_mae=19.28 val_f_mae=2.866
+TEST {'e_mae': 5.369634042358398, 'f_mae': 2.8498807259114582, 'best_val_f_mae': 2.8317001519097222, 'epochs': 139, 'params': 43073, 'norms': (7.42116641998291, 51.56883239746094)}

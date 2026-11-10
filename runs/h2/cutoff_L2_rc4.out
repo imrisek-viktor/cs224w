@@ -1,0 +1,23 @@
+avg neighbours/atom: short=12.4 long=46.6
+mode=cutoff rc=4.0 rl=20.0 params=43073 device=cpu
+epoch=0 time_h=0.005157 epoch_s=18.57 lr=0.0005 lam=0 train_loss=498.8 n_short_per_mol=727.8 n_long_per_mol=0 val_e_mae=36.13 val_f_mae=11.91
+epoch=5 time_h=0.03536 epoch_s=21.46 lr=0.0004999 lam=0 train_loss=99.44 n_short_per_mol=754 n_long_per_mol=0 val_e_mae=42.95 val_f_mae=7.117
+epoch=10 time_h=0.06646 epoch_s=23.87 lr=0.0004996 lam=0 train_loss=72.2 n_short_per_mol=721.8 n_long_per_mol=0 val_e_mae=67.03 val_f_mae=6.176
+epoch=15 time_h=0.1009 epoch_s=26.16 lr=0.0004991 lam=0 train_loss=60.79 n_short_per_mol=745.5 n_long_per_mol=0 val_e_mae=156.9 val_f_mae=5.601
+epoch=20 time_h=0.1361 epoch_s=26.02 lr=0.0004985 lam=0 train_loss=46.29 n_short_per_mol=725 n_long_per_mol=0 val_e_mae=130 val_f_mae=5.072
+epoch=25 time_h=0.174 epoch_s=28.01 lr=0.0004977 lam=0 train_loss=46.19 n_short_per_mol=762 n_long_per_mol=0 val_e_mae=235.5 val_f_mae=5.316
+epoch=30 time_h=0.2134 epoch_s=28.23 lr=0.0004967 lam=0 train_loss=36.02 n_short_per_mol=720.5 n_long_per_mol=0 val_e_mae=6.371 val_f_mae=4.517
+epoch=35 time_h=0.2523 epoch_s=28.23 lr=0.0004956 lam=0 train_loss=33.23 n_short_per_mol=718.8 n_long_per_mol=0 val_e_mae=98.72 val_f_mae=4.211
+epoch=40 time_h=0.2922 epoch_s=29.05 lr=0.0004943 lam=0 train_loss=29.91 n_short_per_mol=749.2 n_long_per_mol=0 val_e_mae=141.7 val_f_mae=4.074
+epoch=45 time_h=0.3331 epoch_s=28.73 lr=0.0004928 lam=0 train_loss=26.82 n_short_per_mol=739.8 n_long_per_mol=0 val_e_mae=44.7 val_f_mae=3.847
+epoch=50 time_h=0.3756 epoch_s=30.46 lr=0.0004912 lam=0 train_loss=25.16 n_short_per_mol=729.5 n_long_per_mol=0 val_e_mae=36.98 val_f_mae=3.758
+epoch=55 time_h=0.4182 epoch_s=29.87 lr=0.0004894 lam=0 train_loss=25.26 n_short_per_mol=737.8 n_long_per_mol=0 val_e_mae=7.56 val_f_mae=3.58
+epoch=60 time_h=0.4589 epoch_s=28.88 lr=0.0004874 lam=0 train_loss=22.29 n_short_per_mol=747.5 n_long_per_mol=0 val_e_mae=5.196 val_f_mae=3.499
+epoch=65 time_h=0.4991 epoch_s=28.67 lr=0.0004852 lam=0 train_loss=21.05 n_short_per_mol=754.5 n_long_per_mol=0 val_e_mae=18.75 val_f_mae=3.403
+epoch=70 time_h=0.5399 epoch_s=29.61 lr=0.000483 lam=0 train_loss=20.28 n_short_per_mol=752.8 n_long_per_mol=0 val_e_mae=8.483 val_f_mae=3.4
+epoch=75 time_h=0.5814 epoch_s=31.15 lr=0.0004805 lam=0 train_loss=19.63 n_short_per_mol=719.2 n_long_per_mol=0 val_e_mae=30.29 val_f_mae=3.299
+epoch=80 time_h=0.6253 epoch_s=32.64 lr=0.0004779 lam=0 train_loss=18.85 n_short_per_mol=723.8 n_long_per_mol=0 val_e_mae=22.58 val_f_mae=3.19
+epoch=85 time_h=0.6689 epoch_s=30.47 lr=0.0004751 lam=0 train_loss=18.53 n_short_per_mol=716 n_long_per_mol=0 val_e_mae=25.3 val_f_mae=3.147
+epoch=90 time_h=0.7105 epoch_s=30.09 lr=0.0004722 lam=0 train_loss=17.78 n_short_per_mol=737.5 n_long_per_mol=0 val_e_mae=54.33 val_f_mae=3.105
+epoch=95 time_h=0.7554 epoch_s=36.36 lr=0.0004691 lam=0 train_loss=17.01 n_short_per_mol=737 n_long_per_mol=0 val_e_mae=8.093 val_f_mae=3.063
+TEST {'e_mae': 12.019142185974122, 'f_mae': 3.0571463547092015, 'best_val_f_mae': 3.035086501736111, 'epochs': 99, 'params': 43073, 'norms': (12.36966609954834, 46.62033462524414)}
