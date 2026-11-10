@@ -1,4 +1,4 @@
-# Which atoms need to talk? Experiment log, Nov 9–10, 2026
+# Which atoms need to talk? Experiment log, Nov 9–10, 2026 (updated Nov 10, evening)
 
 CS224W project (Viktor Imrisek, Emiyare Ikwut-Ukwa). This is a working log of the first two days of
 experiments, written to share where things stand. All numbers are force mean absolute errors (MAE) in
@@ -17,9 +17,13 @@ kcal/mol/Å unless stated otherwise. Lower is better.
    retraining, already beats a model trained from scratch on 2,000 AT-AT-CG-CG configurations on
    atoms far from the new C/G bases (1.50 vs 2.29). Its errors concentrate on C and G and their
    immediate neighbours.
-4. **Proposed new main question:** how many labels and how much training does AT-AT pretraining save
-   on AT-AT-CG-CG, and can we predict *from the graph* where the transferred model will be wrong?
-   (Section 6.)
+4. **New direction (Section 6): learned sparse graphs at a fixed edge budget.** Instead of asking
+   whether long-range edges beat a 5 Å graph, ask which few extra edges a cheap 3 Å graph needs to
+   approach 5 Å accuracy. The 5 Å graph has ~2.7× more edges, and step time scales with edges.
+   Candidates are ranked by an over-squashing-style **influence gap**: how much more
+   ∂F_i/∂r_j the 5 Å model has than the 3 Å model. On AT-AT, the gap picks are enriched for edges
+   between bases (43–50% vs 17–30% for raw influence). A 30-run AT-AT sweep started Nov 10
+   (`runs/edges_atat`). Transfer to AT-AT-CG-CG becomes the second experiment (Section 7).
 
 ## 1. Setup
 
@@ -141,12 +145,106 @@ neighbours. Energies don't transfer zero-shot (different composition, so a diffe
 so all transfer comparisons use forces. The no-retraining error (7.97) is about where from-scratch
 training was after ~10 of its 300 epochs.
 
-## 6. Where this leaves the project
+## 6. New main direction: which edges does a cheap graph need? (edge budget + influence)
 
-The gating proposal needs molecules much larger than the model's receptive field, which MD22's
-DNA systems mostly aren't. Two TA concerns also apply: soft gates don't save compute, and gates
-built on per-model embeddings don't transfer cleanly. We propose making **transfer** the main
-question:
+The gating proposal asked whether long-range edges beat a cutoff graph. On MD22's DNA systems they
+don't: the cutoff graph already sees almost everything. Two TA concerns also apply: soft gates
+don't save compute, and gates built on per-model embeddings don't transfer cleanly.
+
+But our runs show headroom in the other direction. On AT-AT, a 3 Å graph reaches 2.03 and a 5 Å graph
+1.24, and the 5 Å graph has ~2.7× more edges. **New question: at a fixed edge budget, which edges should a
+message-passing force field use?** Can a 3 Å graph plus a few selected edges recover most of the
+3 Å → 5 Å gap at a fraction of the cost? This keeps the proposal's question ("which atoms need to
+talk?") but makes the compute savings real: unselected edges are never computed.
+
+### 6.1 Cost scales with edges (AT-AT-CG-CG, one training step, batch 16, Mac M4 Pro GPU)
+
+| graph | edges / atom | edges between bases / atom | ms / step (GPU) | ms / step (CPU) |
+|---|---|---|---|---|
+| 3 Å | 7.6 | 0.8 | 18 | 71 |
+| 4 Å | 13.4 | 3.7 | 29 | 114 |
+| 5 Å | 21.6 | 9.3 | 49 | 193 |
+| 6 Å | 31.1 | 17.5 | 66 | 260 |
+
+About 2.2 ms per extra edge per atom, so 3 Å + 4 selected edges/atom ≈ 1.6× faster than 5 Å
+(ceiling 2.7×). Note that the 3 Å graph is almost entirely within-base: bases barely talk.
+On 60-atom AT-AT the GPU is overhead-bound (12 vs 21 ms/step), so the savings case gets stronger
+with molecule size.
+
+### 6.2 Over-squashing-style influence
+
+Influence of atom j on atom i in a trained model: I_ij = ‖∂F_i/∂r_j‖ (3×3 block of the model's Hessian).
+This is the force-field version of the sensitivity Jacobian used in over-squashing analyses
+(Topping et al.). Computed by autograd, ~1–3 s per configuration on CPU.
+
+Exploration on the 5 Å AT-AT-CG-CG model (30 test configurations, `src/influence_explore.py`):
+- Influence decays steeply: mean 98 at 2–3 Å, 17 at 3–4 Å, 5.7 at 4–5 Å, 1.8 at 5–6 Å, 0.03 at 8–12 Å.
+- In the 3–5 Å shell (edges a 3 Å graph lacks) it is moderately concentrated: the top 25% of pairs
+  carry 62% of the influence.
+- It is stable across configurations (rank correlation 0.84 with the mean), so a fixed edge list
+  for one molecule is reasonable.
+- It is not just distance: top-25% by influence overlaps only 60% with the nearest 25%.
+- At matched distance, same-base pairs have ~2× more influence than pairs between bases.
+
+**Why raw influence is not the right selection criterion.** It is end to end: if j affects i through
+a 2-hop path in the 3 Å graph, the 3 Å model can carry that influence without a direct edge.
+**Selection criterion: the influence gap** relu(I_teacher − I_student) between a 5 Å teacher and a
+3 Å student: influence the narrow graph fails to carry (is over-squashed). Edges go where the gap is
+largest.
+
+### 6.3 Edge lists for AT-AT (`src/edge_select.py`, `data/edges/AT-AT/`)
+
+Teacher `runs/h1/cutoff_rc5`, student `runs/h1/cutoff_rc3`, influence averaged over 200 training
+configurations. Candidates: 286 pairs with median distance 3–5 Å. Budget k = extra edges per atom
+on average (k·60/2 pairs).
+
+| method | k=1: between bases | k=2: between bases | k=4: between bases | k=4: overlap with nearest |
+|---|---|---|---|---|
+| influence gap | **43%** | **50%** | **49%** | 52% |
+| raw teacher influence | 17% | 30% | 32% | 70% |
+| nearest (median distance) | 20% | 17% | 31% | 100% |
+| random | 40% | 37% | 37% | 42% |
+
+The gap picks edges between bases far more than raw influence does. Within-base influence the
+3 Å model already routes through short paths; the influence it fails to carry is between bases.
+That's the over-squashing picture: the bottleneck is the few edges connecting the bases.
+
+### 6.4 Model and sweep (`--mode pairs` in `src/train.py`, `runs/edges_atat.py`)
+
+- **Model:** a 3 Å cutoff model plus a fixed list of extra atom pairs, in layers ≥ 1. They go through a
+  separate filter with its own 0–7 Å distance basis, a cosine cutoff at 7 Å, and a zero-initialized
+  output, so the model starts as the plain 3 Å model.
+  A fixed list has no runtime scoring cost and no rank swaps, so the energy stays smooth.
+- **Sweep (started Nov 10, results pending):** plain cutoff 3/4/5 Å, plus 3 Å + {gap, nearest,
+  teacher, random} at k = 1, 2, 4. All 400-epoch cosine, 3000 training configurations, 2 seeds.
+  Output: force error vs ms/step, compared with the 3/4/5 Å reference curve.
+- **Win condition:** gap-selected edges beat nearest/random at equal budget and lie below the
+  cutoff-radius curve (better accuracy at equal cost).
+
+### 6.5 Design notes and open choices
+
+- **Scorer for new molecules.** A fixed list only fits one molecule. To transfer, train a cheap
+  scorer to predict the influence gap. Candidates: an element-pair × distance table (tiny,
+  interpretable, independent of model embeddings) or a factorized dot product of small per-atom
+  vectors plus a distance term (~30 FLOPs per pair). The current MLP gate costs about as much as a
+  message, so it can't save compute.
+- **Smoothness.** If selection is recomputed per configuration, hard top-k makes the energy jump
+  when ranks swap. Edges must fade in and out (a smooth step of score − threshold) and be computed
+  only where the weight is > 0.
+- **Budget control.** A fixed sparsity penalty λ left gates mostly open in our runs. Control the
+  average number of edges directly instead.
+- **Selection rule.** Global top-K per molecule (budget goes where it's needed) vs fixed k per atom.
+- **Reach.** A 5 Å teacher can only nominate within its own receptive structure. For longer-range
+  candidates, use the dense model (with the fixed distance encoding) as teacher.
+- **Data.** For a system where long-range interactions matter by construction, the best next
+  dataset is the MD22 buckyball catcher (148 atoms, host + C60 guest). Short-cutoff MACE
+  lets it fall apart in MD (Kovács et al. 2023), and host/guest gives a clean ground truth for
+  interface edges. Not downloaded yet.
+
+## 7. Second direction: transfer AT-AT → AT-AT-CG-CG
+
+Builds on Section 5. Kept as the second experiment, and combinable with Section 6: does the selected
+graph (or a learned scorer) carry over, and does fine-tuning converge faster than from scratch?
 
 - **Q1 (application): how many AT-AT-CG-CG labels and how much training does AT-AT pretraining save?**
   Test error against number of target configurations (25 → 2000) for: from scratch, full
@@ -162,11 +260,10 @@ question:
   channel) the reverse.
 - **Q3 (stretch):** use novelty to choose which configurations to label or which atoms to weight.
 
-Gates drop out as a main thread; the long-range channel survives as the "wide receptive field"
-setting in Q2(c). Generality is limited to one pair of molecules; the reverse direction
-(AT-AT-CG-CG → AT-AT) is a cheap second data point.
+Generality is limited to one pair of molecules; the reverse direction (AT-AT-CG-CG → AT-AT) is a
+cheap second data point.
 
-## 7. Reproducing
+## 8. Reproducing
 
 See `README.md` for setup and commands. Run directories contain `args.json` (exact arguments),
 `log.csv` (per-epoch metrics), `test.json` (final test metrics, if finished) and checkpoints

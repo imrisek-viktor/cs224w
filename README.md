@@ -14,6 +14,10 @@ src/fragments.py         covalent fragments (nucleobases) -> data/<name>_fragmen
 src/summarize.py         table + validation curves for a run directory
 src/plot_atat_curves.py  AT-AT curves figure (runs/atat_val_curves.png)
 src/zeroshot.py          AT-AT model evaluated on AT-AT-CG-CG, errors per nucleobase
+src/edge_select.py       influence (||dF_i/dr_j||) of teacher/student models -> ranked extra-edge lists
+src/influence_explore.py exploratory influence-by-distance analysis on AT-AT-CG-CG
+runs/edges_atat.py       job queue for the AT-AT edge-budget sweep (outputs in runs/edges_atat/)
+data/edges/AT-AT/        influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
 runs/*.sh                launch scripts for the experiments
 runs/h1, runs/h2         AT-AT headroom experiments
 runs/atcg1               AT-AT-CG-CG headroom + gates (before the distance-encoding fix)

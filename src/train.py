@@ -82,7 +82,7 @@ class Interaction(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, mode, rc, rl, F=64, L=3, nrbf=50, e_shift=0.0, e_scale=1.0):
+    def __init__(self, mode, rc, rl, F=64, L=3, nrbf=50, e_shift=0.0, e_scale=1.0, pairs=None):
         super().__init__()
         self.mode, self.rc, self.rl = mode, rc, rl
         self.emb = nn.Embedding(20, F)
@@ -90,7 +90,15 @@ class Model(nn.Module):
         # far the long channel reaches; the long channel gets its own basis on [rc, rl].
         # (atcg1 used one basis over 0..rl, which coarsened short-range resolution ~5x for dense/gated.)
         self.rbf = RBF(rc, nrbf)
-        self.lrbf = RBF(rl, nrbf, rmin=rc) if mode != "cutoff" else None
+        if mode == "pairs":
+            # fixed extra edge list (atom-index pairs, same for every configuration of the molecule).
+            # Listed pairs get the extra channel at any distance d < rl, weighted by a cosine cutoff at rl,
+            # so the energy stays smooth (no ramp at rc: listed pairs are often at 3-4 Å).
+            assert pairs is not None, "--mode pairs needs --pairs"
+            self.register_buffer("pairmask", torch.as_tensor(pairs, dtype=torch.bool))
+            self.lrbf = RBF(rl, nrbf)
+        else:
+            self.lrbf = RBF(rl, nrbf, rmin=rc) if mode != "cutoff" else None
         # layer 0 is always short-range only (gate reads its output); later layers get the long channel
         self.layers = nn.ModuleList(
             [Interaction(F, nrbf, long_range=(mode != "cutoff" and l > 0)) for l in range(L)])
@@ -109,7 +117,10 @@ class Model(nn.Module):
         d = torch.cdist(R, R)
         n = R.shape[1]
         short = ((d < self.rc).sum((1, 2)) - n).float().mean() / n
-        long = ((d >= self.rc) & (d < self.rl)).sum((1, 2)).float().mean() / n
+        if self.mode == "pairs":
+            long = (self.pairmask.to(d.device) & (d < self.rl)).sum((1, 2)).float().mean() / n
+        else:
+            long = ((d >= self.rc) & (d < self.rl)).sum((1, 2)).float().mean() / n
         self.norms = (max(float(short), 1.0), max(float(long), 1.0))
         return self.norms
 
@@ -119,7 +130,13 @@ class Model(nn.Module):
         ss, sd, sdist = src[s], dst[s], d[s]
         se = (ss, sd, self.rbf(sdist), cosine_cutoff(sdist, self.rc))
         le, gates = None, None
-        if self.mode != "cutoff":
+        if self.mode == "pairs":
+            n = self.pairmask.shape[0]
+            l = self.pairmask[src % n, dst % n] & (d < self.rl)
+            ls, ld, ldist = src[l], dst[l], d[l]
+            lrbf = self.lrbf(ldist)
+            lw = cosine_cutoff(ldist, self.rl)
+        elif self.mode != "cutoff":
             l = (d >= self.rc) & (d < self.rl)
             ls, ld, ldist = src[l], dst[l], d[l]
             lrbf = self.lrbf(ldist)
@@ -190,7 +207,9 @@ def evaluate(model, z, R, Fref, Eref, idxs, device, bs, pair_cache):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/md22_AT-AT.npz")
-    ap.add_argument("--mode", choices=["cutoff", "dense", "gated"], default="cutoff")
+    ap.add_argument("--mode", choices=["cutoff", "dense", "gated", "pairs"], default="cutoff")
+    ap.add_argument("--pairs", default=None,
+                    help="pairs mode: .npy of (K, 2) atom-index pairs added as extra edges (with --rl as their cutoff)")
     ap.add_argument("--rc", type=float, default=5.0)
     ap.add_argument("--rl", type=float, default=20.0)
     ap.add_argument("--F", type=int, default=64)
@@ -235,7 +254,14 @@ def main():
     # raw energies (~1e6 kcal/mol) lose precision in float32 -> train on centered energies
     Er_c = torch.tensor(D["E"] - e_shift, dtype=torch.float32, device=dev)
 
-    model = Model(a.mode, a.rc, a.rl, a.F, a.L, e_shift=0.0, e_scale=e_scale).to(dev)
+    pairmask = None
+    if a.mode == "pairs":
+        P = np.load(a.pairs)
+        pairmask = np.zeros((len(D["z"]), len(D["z"])), dtype=bool)
+        pairmask[P[:, 0], P[:, 1]] = pairmask[P[:, 1], P[:, 0]] = True
+        np.fill_diagonal(pairmask, False)
+        print(f"extra edges: {pairmask.sum() // 2} pairs from {a.pairs}", flush=True)
+    model = Model(a.mode, a.rc, a.rl, a.F, a.L, e_shift=0.0, e_scale=e_scale, pairs=pairmask).to(dev)
     norms = model.set_norms(torch.tensor(D["R"][tr[:200]]))
     print(f"avg neighbours/atom: short={norms[0]:.1f} long={norms[1]:.1f}", flush=True)
     opt = torch.optim.Adam(model.parameters(), lr=a.lr)
