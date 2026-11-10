@@ -2,6 +2,10 @@
 
 CS224W project, Viktor Imrisek and Emiyare Ikwut-Ukwa.
 
+> **⚠️ Warning:** results so far use a random frame split of a single MD trajectory, so test frames sit
+> 2–3 steps from training frames and absolute errors are optimistic. A blocked split with gaps is
+> proposed in WRITEUP.md §1.1 (`src/split_check.py` reproduces the numbers).
+
 **Start with [WRITEUP.md](WRITEUP.md)** for the experiments so far, the results, and the proposed
 direction (transfer from AT-AT to AT-AT-CG-CG). The original proposal is `CS224W_project__2_.pdf`.
 
@@ -16,6 +20,8 @@ src/plot_atat_curves.py  AT-AT curves figure (runs/atat_val_curves.png)
 src/zeroshot.py          AT-AT model evaluated on AT-AT-CG-CG, errors per nucleobase
 src/edge_select.py       influence (||dF_i/dr_j||) of teacher/student models -> ranked extra-edge lists
 src/influence_explore.py exploratory influence-by-distance analysis on AT-AT-CG-CG
+src/split_check.py       how close test frames are to training frames under the random split
+src/plot_edges.py        validation curves for the edge-budget sweep
 runs/edges_atat.py       job queue for the AT-AT edge-budget sweep (outputs in runs/edges_atat/)
 data/edges/AT-AT/        influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
 runs/*.sh                launch scripts for the experiments

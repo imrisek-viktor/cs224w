@@ -4,6 +4,13 @@ CS224W project (Viktor Imrisek, Emiyare Ikwut-Ukwa). This is a working log of th
 experiments, written to share where things stand. All numbers are force mean absolute errors (MAE) in
 kcal/mol/Å unless stated otherwise. Lower is better.
 
+> **⚠️ Warning: all results so far use a random frame split, which leaks between train and test.**
+> MD22 frames come from one continuous trajectory. Random sampling interleaves train/val/test along
+> it: a test frame's nearest training frame is typically only 2–3 steps away, and ~30% of test
+> frames sit right next to a training frame. Absolute errors below are therefore optimistic
+> (partly interpolation along the trajectory). Comparisons between models are less affected, since all
+> share the split. We propose a blocked split with gaps for all results from now on (Section 1.1).
+
 ## TL;DR
 
 1. **The original gating idea has no room to help on these molecules.** On AT-AT (60 atoms), a plain
@@ -22,8 +29,9 @@ kcal/mol/Å unless stated otherwise. Lower is better.
    approach 5 Å accuracy. The 5 Å graph has ~2.7× more edges, and step time scales with edges.
    Candidates are ranked by an over-squashing-style **influence gap**: how much more
    ∂F_i/∂r_j the 5 Å model has than the 3 Å model. On AT-AT, the gap picks are enriched for edges
-   between bases (43–50% vs 17–30% for raw influence). A 30-run AT-AT sweep started Nov 10
-   (`runs/edges_atat`). Transfer to AT-AT-CG-CG becomes the second experiment (Section 7).
+   between bases (43–50% vs 17–30% for raw influence). A first AT-AT sweep (`runs/edges_atat`) was
+   started and stopped early. It will be rerun with a longer, extendable LR schedule and the blocked
+   split (Section 6.4). Transfer to AT-AT-CG-CG becomes the second experiment (Section 7).
 
 ## 1. Setup
 
@@ -31,7 +39,57 @@ kcal/mol/Å unless stated otherwise. Lower is better.
 - **AT-AT**: 60 atoms, two stacked A–T base pairs, 4 covalent fragments, max pair distance ~17 Å.
 - **AT-AT-CG-CG**: 118 atoms, 8 separate nucleobases (2 each of A, T, C, G), max pair distance ~20.5 Å.
 - Splits: a fixed random permutation (seed 1234), not the official MD22 split. AT-AT uses
-  3000 train / 500 val / 5000 test. AT-AT-CG-CG uses 2000 / 500 / 2000.
+  3000 train / 500 val / 5000 test. AT-AT-CG-CG uses 2000 / 500 / 2000. **This split leaks; see 1.1.**
+
+### 1.1 Data split: the leak and the proposed fix
+
+**The leak** (`src/split_check.py`). Every frame comes from one MD trajectory, and the random split
+interleaves train, validation and test along it.
+
+| dataset | frames | test → nearest training frame (median) | test frames adjacent to a training frame | max distance |
+|---|---|---|---|---|
+| AT-AT | 20,001 | 3 frames | 29% | 22 frames |
+| AT-AT-CG-CG | 10,153 | 2 frames | 35% | 16 frames |
+
+How fast the trajectory changes (both molecules nearly identical):
+
+| frame lag | 1 | 2 | 5 | 10 | 20 | 50 |
+|---|---|---|---|---|---|---|
+| force correlation | 0.92 | 0.73 | 0.00 | −0.21 | 0.27 | −0.05 |
+| RMS atom displacement (Å) | 0.02 | 0.04 | 0.10 | 0.17 | 0.24 | 0.37 |
+
+Forces decorrelate within ~5 frames (fast bond vibrations), and geometry changes more slowly. So about
+a third of test frames have a near-duplicate in training: forces 92% correlated, atoms ~0.02 Å apart.
+
+**Consequences:**
+- Absolute test errors are optimistic. They match how sGDML/MD22 benchmarks usually sample, so they
+  remain comparable to published numbers, but they overstate generalization.
+- Model-vs-model comparisons share the leak, so they're only mildly affected. The leak can slightly
+  favour models that fit training data more closely, which tend to be larger graphs.
+- It matters most for generalization-type claims: transfer AT-AT → AT-AT-CG-CG, and whether a
+  selected graph learned something general rather than memorized the trajectory.
+
+**Proposed split: blocked, with gaps.**
+1. Cut the trajectory into B ≈ 20 contiguous blocks of equal length (AT-AT: ~1000 frames each).
+2. Assign whole blocks to train / validation / test (e.g. 14 / 2 / 4), spread over the trajectory
+   (e.g. a fixed shuffled block order, or every 5th block to test), so all three sets cover early and
+   late parts of the run. A plain "first 70% train, last 30% test" split would mostly measure drift
+   instead.
+3. Drop a buffer of G ≈ 50 frames at every boundary between blocks of different sets. Then no evaluation
+   frame is within 50 steps (~0.4 Å RMS, forces fully decorrelated) of a training frame.
+4. Subsample the training budget (3000 / 2000 configurations) uniformly from the training blocks, so
+   the number of training configurations stays as before.
+5. Fix the block assignment once per dataset (save the indices to `data/<name>_split.npz`) so every
+   run uses the same split.
+
+**Reporting:** main results on the blocked split; the random split as a secondary number comparable to
+the literature. Checks once implemented: rerun `split_check.py` on the new split (nearest training
+frame ≥ G), and compare a model's error on random vs blocked test sets to measure how optimistic the
+old numbers were.
+
+**Knock-on effects:** the edge-selection teacher and student (`runs/h1/cutoff_rc5`, `cutoff_rc3`) were
+trained on the random split. The selection only uses their training frames, so it's still valid, but
+retraining both on the blocked split (~1 h on the Mac) is cleaner before the main sweep.
 
 **Model** (`src/train.py`, plain PyTorch): SchNet-style continuous-filter convolutions, 64 features,
 L layers. Forces are −∂E/∂positions; the loss is per-atom energy MSE plus force MSE.
@@ -215,9 +273,23 @@ That's the over-squashing picture: the bottleneck is the few edges connecting th
   separate filter with its own 0–7 Å distance basis, a cosine cutoff at 7 Å, and a zero-initialized
   output, so the model starts as the plain 3 Å model.
   A fixed list has no runtime scoring cost and no rank swaps, so the energy stays smooth.
-- **Sweep (started Nov 10, results pending):** plain cutoff 3/4/5 Å, plus 3 Å + {gap, nearest,
+- **First sweep (Nov 10, stopped after ~30 min):** plain cutoff 3/4/5 Å, plus 3 Å + {gap, nearest,
   teacher, random} at k = 1, 2, 4. All 400-epoch cosine, 3000 training configurations, 2 seeds.
-  Output: force error vs ms/step, compared with the 3/4/5 Å reference curve.
+  Six runs got 57–236 epochs (checkpoints in `runs/edges_atat`, resumable). Early on, the 3 Å + 2-edge
+  models led all plain cutoffs at equal epochs (~3.4 vs 3.9–4.2 at epoch 37), with no difference
+  between selection methods yet.
+  - Stopped because 400 epochs is too short: in the long h1 runs, 5 Å was at 1.61 by epoch 400 and
+    1.24 by epoch 1500, while 3 Å was nearly done. A short budget compresses the gap we want to measure.
+  - Also stopped because of the split leak (Section 1.1).
+- **Planned rerun:**
+  - **Split:** the blocked split.
+  - **Schedule:** warmup–stable–decay (WSD) instead of cosine-to-zero, optionally with weight
+    averaging (EMA). The constant-LR phase can be extended freely, and any saved checkpoint can be
+    "finished" with a short decay. That gives each model accuracy vs training budget (e.g. at 200 /
+    400 / 800 / 1600 epochs) from one run.
+  - **First runs:** seed 0 for cutoff 3/4/5 Å and the four methods at k = 2, 4 (11 runs). Second
+    seed and k = 1 afterwards.
+  - **Output:** force error vs ms/step and vs training budget, against the 3/4/5 Å reference curve.
 - **Win condition:** gap-selected edges beat nearest/random at equal budget and lie below the
   cutoff-radius curve (better accuracy at equal cost).
 
