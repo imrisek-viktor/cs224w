@@ -1,0 +1,13 @@
+influence on 100 configs: 392 s
+118 atoms, 1063 candidate pairs (3.0-6.0 Å median distance)
+method   budget  pairs  mean dist  inter-base  overlap w/ nearest  teacher-influence covered
+teacher       2    118     3.56 Å          8%                 54%                        42%
+nearest       2    118     3.31 Å         19%                100%                        31%
+random        2    118     4.89 Å         65%                  9%                        11%
+teacher       4    236     3.67 Å         18%                 76%                        62%
+nearest       4    236     3.52 Å         31%                100%                        56%
+random        4    236     4.78 Å         64%                 23%                        21%
+teacher       8    472     4.03 Å         39%                 88%                        82%
+nearest       8    472     3.95 Å         38%                100%                        80%
+random        8    472     4.75 Å         61%                 45%                        45%
+wrote data/edges/AT-AT-CG-CG

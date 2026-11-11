@@ -63,7 +63,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
     ap.add_argument("--teacher", required=True)
-    ap.add_argument("--student", required=True)
+    ap.add_argument("--student", default=None, help="optional; without it the gap ranking is skipped")
     ap.add_argument("--ntrain", type=int, default=3000, help="must match the runs' training split")
     ap.add_argument("--nconf", type=int, default=200, help="training configurations to average over")
     ap.add_argument("--pool", type=float, nargs=2, default=[3.0, 5.0], help="candidate median-distance range")
@@ -82,21 +82,22 @@ def main():
 
     t0 = time.time()
     It = influence(load_model(a.teacher, D, tr), z, conf)
-    Is = influence(load_model(a.student, D, tr), z, conf)
+    Is = influence(load_model(a.student, D, tr), z, conf) if a.student else None
     print(f"influence on {a.nconf} configs: {time.time() - t0:.0f} s", flush=True)
 
     iu = np.triu_indices(n, 1)
     pool = (dmed[iu] >= a.pool[0]) & (dmed[iu] < a.pool[1])
     cand = np.nonzero(pool)[0]
     scores = {
-        "gap": np.maximum(It - Is, 0)[iu][cand],
         "teacher": It[iu][cand],
         "nearest": -dmed[iu][cand],
         "random": np.random.default_rng(0).random(len(cand)),
     }
+    if Is is not None:
+        scores["gap"] = np.maximum(It - Is, 0)[iu][cand]
     fpath = Path(a.data).with_name(Path(a.data).stem + "_fragments.npy")
     inter = (np.load(fpath)[:, None] != np.load(fpath)[None])[iu][cand] if fpath.exists() else None
-    np.savez(out / "influence.npz", teacher=It, student=Is, dmed=dmed, pool=pool, args=json.dumps(vars(a)))
+    np.savez(out / "influence.npz", teacher=It, student=Is if Is is not None else np.zeros_like(It), dmed=dmed, pool=pool, args=json.dumps(vars(a)))
 
     print(f"{n} atoms, {len(cand)} candidate pairs ({a.pool[0]}-{a.pool[1]} Å median distance)")
     print("method   budget  pairs  mean dist  inter-base  overlap w/ nearest  teacher-influence covered")

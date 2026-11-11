@@ -1,0 +1,32 @@
+30 of 30 jobs to run
+14:57 started s0/cutoff_rc3 on mps pid 7029
+14:57 started s0/cutoff_rc4 on mps pid 7030
+14:57 started s0/cutoff_rc5 on mps pid 7031
+14:57 started s0/gap_k2 on cpu pid 7032
+14:57 started s0/nearest_k2 on cpu pid 7033
+14:57 started s0/teacher_k2 on cpu pid 7034
+--- 18:09 resumed under WSD, 1200 epochs
+11 of 11 jobs to run
+18:09 started s0/cutoff_rc3 on mps pid 9484
+18:09 started s0/cutoff_rc4 on mps pid 9485
+18:09 started s0/cutoff_rc5 on mps pid 9486
+18:09 started s0/gap_k2 on cpu pid 9487
+18:09 started s0/nearest_k2 on cpu pid 9488
+18:09 started s0/teacher_k2 on cpu pid 9489
+18:09 started s0/random_k2 on cpu pid 9490
+19:57 finished s0/cutoff_rc3 exit 0
+19:57 started s0/gap_k4 on mps pid 11476
+20:45 finished s0/cutoff_rc4 exit 0
+20:45 started s0/nearest_k4 on mps pid 12339
+21:09 finished s0/cutoff_rc5 exit 0
+21:09 started s0/teacher_k4 on mps pid 12929
+22:57 finished s0/gap_k4 exit 0
+22:57 started s0/random_k4 on mps pid 14646
+23:18 finished s0/nearest_k4 exit 0
+23:48 finished s0/teacher_k4 exit 0
+00:33 finished s0/teacher_k2 exit 0
+00:37 finished s0/gap_k2 exit 0
+00:38 finished s0/nearest_k2 exit 0
+00:44 finished s0/random_k2 exit 0
+01:35 finished s0/random_k4 exit 0
+all done

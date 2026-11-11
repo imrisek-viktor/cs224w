@@ -12,6 +12,7 @@ import argparse
 import csv
 import json
 import math
+import shutil
 import time
 from pathlib import Path
 
@@ -226,7 +227,14 @@ def main():
     ap.add_argument("--lam_ramp_epochs", type=int, default=50)
     ap.add_argument("--hours", type=float, default=1.0, help="wall-clock training budget")
     ap.add_argument("--max_epochs", type=int, default=100000)
-    ap.add_argument("--sched", choices=["plateau", "cosine"], default="plateau")
+    ap.add_argument("--sched", choices=["plateau", "cosine", "wsd"], default="plateau",
+                    help="wsd = warmup-stable-decay: constant --lr, then linear decay to --lr_min over the "
+                         "last --decay_epochs of --max_epochs")
+    ap.add_argument("--decay_epochs", type=int, default=200, help="wsd: length of the final decay")
+    ap.add_argument("--lr_min", type=float, default=1e-6)
+    ap.add_argument("--save_at", type=int, nargs="*", default=[],
+                    help="also keep a copy of the full training state after these epochs (stable_ep<N>.pt), "
+                         "e.g. to branch off a short decay later")
     ap.add_argument("--resume", action="store_true", help="continue from <out>/last.pt if present")
     ap.add_argument("--eval_bs", type=int, default=16, help="eval batch (large ones blow MPS memory)")
     ap.add_argument("--seed", type=int, default=0)
@@ -265,10 +273,19 @@ def main():
     norms = model.set_norms(torch.tensor(D["R"][tr[:200]]))
     print(f"avg neighbours/atom: short={norms[0]:.1f} long={norms[1]:.1f}", flush=True)
     opt = torch.optim.Adam(model.parameters(), lr=a.lr)
+    sched = None
     if a.sched == "cosine":  # fixed epoch budget -> every run finishes the same schedule
-        sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=a.max_epochs, eta_min=1e-6)
-    else:
-        sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.7, patience=15, min_lr=1e-6)
+        sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=a.max_epochs, eta_min=a.lr_min)
+    elif a.sched == "plateau":
+        sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.7, patience=15, min_lr=a.lr_min)
+
+    def wsd_lr(ep):
+        """Constant a.lr, then linear decay reaching a.lr_min at the last epoch. Stateless: depends only on
+        the epoch, so a run resumed (even from another schedule's checkpoint) follows the same curve."""
+        start = a.max_epochs - a.decay_epochs
+        if ep < start:
+            return a.lr
+        return a.lr + (a.lr_min - a.lr) * (ep - start + 1) / a.decay_epochs
     nparam = sum(p.numel() for p in model.parameters())
     print(f"mode={a.mode} rc={a.rc} rl={a.rl} params={nparam} device={dev}", flush=True)
 
@@ -276,9 +293,14 @@ def main():
     start_ep, best, prev_h = 0, float("inf"), 0.0
     if a.resume and (out / "last.pt").exists():
         ck = torch.load(out / "last.pt", map_location=dev)
-        model.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"]); sched.load_state_dict(ck["sched"])
+        model.load_state_dict(ck["model"]); opt.load_state_dict(ck["opt"])
+        if sched is not None and ck.get("sched_type", "cosine" if "T_max" in (ck.get("sched") or {}) else "plateau") == a.sched:
+            sched.load_state_dict(ck["sched"])
+        elif sched is not None:
+            print(f"note: checkpoint used another LR schedule; starting a fresh {a.sched} schedule", flush=True)
         start_ep, best, prev_h = ck["epoch"] + 1, ck["best"], ck["hours"]
-        print(f"resumed from epoch {start_ep} (best val F {best:.3f}, {prev_h:.2f} h so far)", flush=True)
+        print(f"resumed from epoch {start_ep} (best val F {best:.3f}, {prev_h:.2f} h so far, "
+              f"checkpoint lr {opt.param_groups[0]['lr']:.3g})", flush=True)
     rows = list(csv.DictReader(open(out / "log.csv"))) if start_ep > 0 and (out / "log.csv").exists() else []
     log = open(out / "log.csv", "w", newline="")
     w = None
@@ -292,6 +314,10 @@ def main():
     ep = start_ep - 1
     for ep in range(start_ep, a.max_epochs):
         ep_t = time.time()
+        if a.sched == "wsd":
+            for gr in opt.param_groups:
+                gr["lr"] = wsd_lr(ep)
+        ep_lr = opt.param_groups[0]["lr"]  # lr used during this epoch (logged)
         lam = a.lam * min(1.0, ep / max(1, a.lam_ramp_epochs))
         order = tr_t[torch.randperm(len(tr_t))].numpy()
         lsum, nb, stats = 0.0, 0, None
@@ -312,10 +338,14 @@ def main():
             torch.mps.empty_cache()
         elif dev.type == "cuda":  # several jobs may share one Colab GPU
             torch.cuda.empty_cache()
-        sched.step() if a.sched == "cosine" else sched.step(v["f_mae"])
+        if a.sched == "cosine":
+            sched.step()
+        elif a.sched == "plateau":
+            sched.step(v["f_mae"])
         hours = prev_h + (time.time() - t0) / 3600
+        # note: older rows (cosine/plateau runs before this change) logged the lr for the *next* epoch
         row = {"epoch": ep, "time_h": hours, "epoch_s": time.time() - ep_t,
-               "lr": opt.param_groups[0]["lr"], "lam": lam, "train_loss": lsum / nb,
+               "lr": ep_lr, "lam": lam, "train_loss": lsum / nb,
                "n_short_per_mol": stats["n_short"] / len(idx), "n_long_per_mol": stats["n_long"] / len(idx),
                **{f"val_{k}": x for k, x in v.items()}}
         if w is None:
@@ -324,9 +354,12 @@ def main():
         if v["f_mae"] < best:
             best = v["f_mae"]
             torch.save(model.state_dict(), out / "best.pt")
-        torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(),
+        torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
+                    "sched": sched.state_dict() if sched is not None else None, "sched_type": a.sched,
                     "epoch": ep, "best": best, "hours": hours}, out / "last.tmp")
         (out / "last.tmp").replace(out / "last.pt")  # atomic, so a kill mid-save can't corrupt it
+        if ep + 1 in a.save_at:
+            shutil.copy(out / "last.pt", out / f"stable_ep{ep + 1}.pt")
         if ep % 5 == 0:
             print(" ".join(f"{k}={x:.4g}" if isinstance(x, float) else f"{k}={x}" for k, x in row.items()),
                   flush=True)

@@ -1,4 +1,4 @@
-# Which atoms need to talk? Experiment log, Nov 9–10, 2026 (updated Nov 10, evening)
+# Which atoms need to talk? Experiment log, Nov 9–11, 2026 (updated Nov 11)
 
 CS224W project (Viktor Imrisek, Emiyare Ikwut-Ukwa). This is a working log of the first two days of
 experiments, written to share where things stand. All numbers are force mean absolute errors (MAE) in
@@ -29,9 +29,18 @@ kcal/mol/Å unless stated otherwise. Lower is better.
    approach 5 Å accuracy. The 5 Å graph has ~2.7× more edges, and step time scales with edges.
    Candidates are ranked by an over-squashing-style **influence gap**: how much more
    ∂F_i/∂r_j the 5 Å model has than the 3 Å model. On AT-AT, the gap picks are enriched for edges
-   between bases (43–50% vs 17–30% for raw influence). A first AT-AT sweep (`runs/edges_atat`) was
-   started and stopped early. It will be rerun with a longer, extendable LR schedule and the blocked
-   split (Section 6.4). Transfer to AT-AT-CG-CG becomes the second experiment (Section 7).
+   between bases (43–50% vs 17–30% for raw influence). Transfer to AT-AT-CG-CG becomes the second
+   experiment (Section 7).
+5. **First edge-budget results (Nov 11, Sections 6.4–6.6): 3 Å + 4 selected edges per atom beats every
+   plain cutoff, at about the cost of a 4 Å graph.**
+   - On AT-AT-CG-CG: test 1.39 vs 1.79 for the best plain cutoff (5 Å), at 0.67× its time per epoch;
+     the 6 Å graph is 1.86 at 2× the cost.
+   - On AT-AT: 0.95 vs 1.06 for 5 Å.
+   - **Which edges matters:** random edges at the same budget are no better than plain cutoffs.
+     But the **influence gap lost**: raw teacher influence and plain "nearest" tie for best, and the
+     gap is worse at k = 4 on AT-AT. A skeptic's caveat: the selected edges are a subset of the 6 Å graph, yet
+     beat it. Part of the gain may come from routing them through a separate channel. A control is
+     planned (Section 6.6).
 
 ## 1. Setup
 
@@ -229,6 +238,21 @@ About 2.2 ms per extra edge per atom, so 3 Å + 4 selected edges/atom ≈ 1.6× 
 On 60-atom AT-AT the GPU is overhead-bound (12 vs 21 ms/step), so the savings case gets stronger
 with molecule size.
 
+Clean per-epoch timing for the AT-AT-CG-CG sweep (Section 6.5): each model run alone on the idle GPU,
+3 epochs, 2000 configurations, batch 16. Edges are directed, per molecule.
+
+| graph | edges / molecule | s / epoch | relative to 6 Å |
+|---|---|---|---|
+| 3 Å | 880 | 3.2 | 0.36× |
+| 4 Å | 1,580 | 4.6 | 0.52× |
+| 5 Å | 2,600 | 6.7 | 0.76× |
+| 6 Å | 3,780 | 8.8 | 1× |
+| 3 Å + 4 selected edges/atom | 880 + 470 | 4.5 | 0.51× |
+| 3 Å + 8 selected edges/atom | 880 + 920 | 5.4 | 0.61× |
+
+The extra-edge channel costs more per edge than plain cutoff edges (3 Å + 4/atom costs about what
+4 Å costs, with fewer edges). It's a separate filter network and isn't fused; this could be optimized.
+
 ### 6.2 Over-squashing-style influence
 
 Influence of atom j on atom i in a trained model: I_ij = ‖∂F_i/∂r_j‖ (3×3 block of the model's Hessian).
@@ -281,19 +305,100 @@ That's the over-squashing picture: the bottleneck is the few edges connecting th
   - Stopped because 400 epochs is too short: in the long h1 runs, 5 Å was at 1.61 by epoch 400 and
     1.24 by epoch 1500, while 3 Å was nearly done. A short budget compresses the gap we want to measure.
   - Also stopped because of the split leak (Section 1.1).
-- **Planned rerun:**
-  - **Split:** the blocked split.
-  - **Schedule:** warmup–stable–decay (WSD) instead of cosine-to-zero, optionally with weight
-    averaging (EMA). The constant-LR phase can be extended freely, and any saved checkpoint can be
-    "finished" with a short decay. That gives each model accuracy vs training budget (e.g. at 200 /
-    400 / 800 / 1600 epochs) from one run.
-  - **First runs:** seed 0 for cutoff 3/4/5 Å and the four methods at k = 2, 4 (11 runs). Second
-    seed and k = 1 afterwards.
-  - **Output:** force error vs ms/step and vs training budget, against the 3/4/5 Å reference curve.
-- **Win condition:** gap-selected edges beat nearest/random at equal budget and lie below the
-  cutoff-radius curve (better accuracy at equal cost).
+- **Rerun (Nov 10 18:09 – Nov 11 01:35), `runs/edges_atat/s0`:**
+  - **Schedule:** warmup–stable–decay (WSD, `--sched wsd`): constant LR 5e-4 for 1000 epochs, then a
+    linear decay to 1e-6 over the last 200. The LR depends only on the epoch, so runs can be extended,
+    and `stable_ep{200,400,800}.pt` checkpoints can later be "finished" with a short decay. That gives
+    accuracy vs training budget without new runs.
+  - **Runs:** seed 0, plain cutoff 3/4/5 Å, and 3 Å + {gap, nearest, teacher, random} at k = 2, 4
+    (11 runs, 3000 training configurations).
+  - **Caveats:** six runs resumed from the stopped cosine sweep (their LR jumped back to 5e-4 at the resume
+    point, epochs 57–236). Still the leaky random split, so compare models, not absolute numbers. One seed.
 
-### 6.5 Design notes and open choices
+**AT-AT results (test force MAE after 1200 epochs):**
+
+| model | directed edges / molecule | test force MAE |
+|---|---|---|
+| plain 3 Å | 443 | 1.90 |
+| plain 4 Å | 737 | 1.12 |
+| plain 5 Å | 1,049 | 1.06 |
+| 3 Å + gap, k=2 | 445 + 115 | 1.33 |
+| 3 Å + nearest, k=2 | 450 + 119 | 1.34 |
+| 3 Å + teacher, k=2 | 450 + 118 | 1.51 |
+| 3 Å + random, k=2 | 446 + 117 | 1.51 |
+| **3 Å + teacher, k=4** | 446 + 236 | **0.95** |
+| **3 Å + nearest, k=4** | 446 + 238 | **0.97** |
+| 3 Å + gap, k=4 | 446 + 231 | 1.19 |
+| 3 Å + random, k=4 | 446 + 234 | 1.30 |
+
+Validation curves: `runs/edges_atat/val_curves.png`.
+
+- With 4 selected edges per atom, the 3 Å model beats 5 Å with ~35% fewer edges. The gap closes and
+  reverses: plain 3 Å is 1.90.
+- The decay phase matters: plain 3 Å went from ~2.05 to 1.90 and 4 Å from ~1.45 to 1.12 in the last
+  200 epochs. Short or untuned schedules would have misranked the models.
+- **Selection method:** at k = 2, gap ≈ nearest > teacher ≈ random. At k = 4, teacher ≈ nearest > gap > random.
+  The influence gap is not the winner. Likely reason: it deliberately skips the 3–4 Å pairs the
+  student "already carries" through 2-hop paths, and reaches further out (median selected distance
+  3.8 Å; 55% under 4 Å, vs 100% for nearest and 73% for teacher). Those 3–4 Å pairs still help a lot
+  as direct edges. The 3 Å student routes their influence, but evidently not well. Teacher and nearest
+  share 70% of their edges at k = 4.
+- The k = 2 teacher result (as bad as random) contradicts k = 4, so seed noise may be large.
+
+### 6.5 Scaling up: AT-AT-CG-CG (118 atoms) edge-budget sweep (`runs/edges_atcg.py`, Nov 11)
+
+- **Edge lists** (`data/edges/AT-AT-CG-CG/`): teacher `runs/atcg1/cutoff_rc6` (300 epochs, cosine), no
+  student (the gap was dropped after AT-AT), influence averaged over 100 training configurations.
+  The pool is 1,063 pairs with median distance 3–6 Å. Methods: teacher, nearest, random.
+  - k = 4: teacher overlaps nearest by 76%; 18% of teacher picks are between bases (nearest 31%).
+  - k = 8: overlap 88%.
+- **Runs:** seed 0, 2000 training configurations (same split as atcg1), WSD over 800 epochs (decay over the last
+  150), plain cutoff 3/4/5/6 Å, 3 Å + teacher/nearest at k = 4 and 8, 3 Å + random at k = 4.
+  ~6 h overnight on the M4 Pro (GPU + CPU).
+- Plots: `runs/edges_atcg/cost_vs_error.png` (error vs time per epoch) and
+  `runs/edges_atcg/val_curves.png`.
+
+| model | s / epoch (idle GPU) | test force MAE | test energy MAE (kcal/mol) |
+|---|---|---|---|
+| plain 3 Å | 3.2 | 2.21 | 4.92 |
+| plain 4 Å | 4.6 | 1.85 | 4.98 |
+| plain 5 Å | 6.7 | 1.79 | 4.75 |
+| plain 6 Å | 8.8 | 1.86 | 4.54 |
+| **3 Å + teacher, k=4** | 4.5 | **1.39** | 4.71 |
+| **3 Å + nearest, k=4** | 4.5 | **1.40** | 4.28 |
+| 3 Å + teacher, k=8 | 5.4 | 1.41 | 4.02 |
+| 3 Å + nearest, k=8 | 5.4 | 1.44 | 4.34 |
+| 3 Å + random, k=4 | 4.5 | 1.90 | 5.36 |
+
+![AT-AT-CG-CG accuracy vs cost](runs/edges_atcg/cost_vs_error.png)
+
+- **Better and cheaper:** 3 Å + 4 teacher edges per atom is 22% more accurate than the best plain cutoff
+  (5 Å) at 0.67× its time per epoch, and 25% more accurate than 6 Å at about half the cost. The lead
+  is there from the first ~10 epochs and holds through the decay (`val_curves.png`).
+- **Which edges matters:** random edges at the same budget (1.90) are no better than plain 4–6 Å.
+- **Teacher ≈ nearest** again (they share 76% of edges).
+- **More is not better:** k = 8 ≈ k = 4, and plain 6 Å is worse than 5 Å. Larger neighborhoods seem to
+  hurt this architecture, at least within 800 epochs (possibly because larger per-layer neighbor sums are harder to fit; not tested).
+
+### 6.6 What we don't know yet / next runs
+
+- **Separate channel vs selection (most important).** Every selected edge is also in the 6 Å graph, yet
+  3 Å + selected beats 6 Å by 0.47. So the gain is not just "more information": routing 3–6 Å pairs
+  through their own filter (own distance basis, zero-initialized, separate normalization) seems to help
+  by itself. Random edges through the same channel do not, so selection also matters. **Control:** 3 Å +
+  *all* 1,063 pool pairs in the separate channel (equivalent to a 6 Å graph split into two channels).
+  - Near 1.4: the story is "split the channels, then prune for speed".
+  - Near 1.8–1.9: selection itself is doing the work.
+  - Could also test a 2-channel 5 Å model.
+- **Seeds.** One seed so far. Teacher vs nearest differences of 0.01–0.02 are certainly noise; the
+  AT-AT k = 2 teacher result suggests seed spread may be ~0.1–0.2. A second seed is needed for the main rows.
+- **Split.** Still the leaky random split (Section 1.1). Rerun the headline comparison on the blocked split.
+- **Better teacher.** The AT-AT-CG-CG teacher was trained only 300 epochs. A converged teacher could
+  separate teacher from nearest.
+- **Budget curves.** `stable_ep*.pt` checkpoints exist for every run. Finishing them with a short
+  decay gives accuracy vs training budget for each model.
+
+### 6.7 Design notes and open choices
 
 - **Scorer for new molecules.** A fixed list only fits one molecule. To transfer, train a cheap
   scorer to predict the influence gap. Candidates: an element-pair × distance table (tiny,

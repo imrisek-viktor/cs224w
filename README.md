@@ -21,9 +21,11 @@ src/zeroshot.py          AT-AT model evaluated on AT-AT-CG-CG, errors per nucleo
 src/edge_select.py       influence (||dF_i/dr_j||) of teacher/student models -> ranked extra-edge lists
 src/influence_explore.py exploratory influence-by-distance analysis on AT-AT-CG-CG
 src/split_check.py       how close test frames are to training frames under the random split
-src/plot_edges.py        validation curves for the edge-budget sweep
+src/plot_edges.py        validation curves for an edge-budget sweep (<root>/val_curves.png)
+src/plot_cost.py         AT-AT-CG-CG accuracy vs time per epoch (runs/edges_atcg/cost_vs_error.png)
 runs/edges_atat.py       job queue for the AT-AT edge-budget sweep (outputs in runs/edges_atat/)
-data/edges/AT-AT/        influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
+runs/edges_atcg.py       job queue for the AT-AT-CG-CG edge-budget sweep (outputs in runs/edges_atcg/)
+data/edges/<molecule>/   influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
 runs/*.sh                launch scripts for the experiments
 runs/h1, runs/h2         AT-AT headroom experiments
 runs/atcg1               AT-AT-CG-CG headroom + gates (before the distance-encoding fix)
@@ -33,7 +35,8 @@ data/                    converted MD22 datasets (AT-AT, AT-AT-CG-CG, Ac-Ala3-NH
 ```
 
 Each run directory has `args.json` (exact arguments), `log.csv` (per-epoch metrics), `test.json`
-(final test metrics, when finished), `best.pt` (best-validation weights) and `last.pt` (resume state).
+(final test metrics, when finished), `best.pt` (best-validation weights), `last.pt` (resume state) and,
+for the WSD sweeps, `stable_ep<N>.pt` (full state at epoch N, before the LR decay).
 Note: dense/gated checkpoints in `runs/h1`, `runs/h2` and `runs/atcg1` use the old shared distance
 encoding and won't load into the current `train.py`; cutoff checkpoints load fine.
 

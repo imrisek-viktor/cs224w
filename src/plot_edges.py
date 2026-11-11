@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "runs/edges_atat")
 METHOD = {"gap": "#eb6834", "nearest": "#1baf7a", "teacher": "#eda100", "random": "#e87ba4"}
-CUT = {"3": "#b4b2a9", "4": "#7d7b74", "5": "#3d3c38"}
+CUT = {"3": "#c9c7bf", "4": "#9a988f", "5": "#5e5c56", "6": "#1f1e1c"}
 KSTYLE = {"1": ":", "2": "-", "4": "-."}
 INK, MUTED, GRID = "#1f1f1e", "#6b6a64", "#e4e3de"
 
@@ -43,12 +43,12 @@ for d in sorted(root.glob("s*/*")):
                 fontsize=7, color=MUTED, va="center")
 ax.set_xscale("log"); ax.set_yscale("log")
 ax.set_yticks([1, 1.5, 2, 3, 5, 10, 20]); ax.set_yticklabels(["1", "1.5", "2", "3", "5", "10", "20"])
-ax.set_xlabel("epoch (of 400)"); ax.set_ylabel("validation force MAE (kcal/mol/Å)")
+ax.set_xlabel("epoch (lr 5e-4 constant, then linear decay to 1e-6 at the end)"); ax.set_ylabel("validation force MAE (kcal/mol/Å)")
 ax.grid(color=GRID, which="both", lw=0.8); ax.set_axisbelow(True)
 for s in ("top", "right"):
     ax.spines[s].set_visible(False)
 ax.legend(fontsize=8, frameon=False, ncol=2, loc="upper right")
-ax.set_title(f"AT-AT edge budget: 3 Å graph + k selected edges per atom vs plain cutoffs ({root.name})",
+ax.set_title(f"Edge budget: 3 Å graph + k selected edges per atom vs plain cutoffs ({root.name})",
              loc="left", fontsize=11, weight="bold")
 fig.text(0.01, 0.01, "Numbers = best validation MAE so far. Seed 1 runs drawn fainter. "
          "k = extra edges per atom on average.", fontsize=8, color=MUTED)

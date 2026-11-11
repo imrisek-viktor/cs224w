@@ -1,0 +1,17 @@
+01:39 9 of 9 jobs to run
+01:39 started s0/cutoff_rc6 on mps pid 17932
+01:39 started s0/cutoff_rc5 on mps pid 17933
+01:39 started s0/teacher_k4 on mps pid 17934
+01:39 started s0/cutoff_rc3 on cpu pid 17935
+01:39 started s0/nearest_k4 on cpu pid 17936
+--- 01:5x queue restarted (random_k4 moved to MPS); training processes kept running
+01:50 9 of 9 jobs to run
+04:01 started s0/cutoff_rc4 on mps pid 20830
+04:35 started s0/teacher_k8 on mps pid 21449
+05:03 started s0/nearest_k8 on mps pid 21830
+05:56 finished s0/cutoff_rc4 exit 0
+05:56 started s0/random_k4 on mps pid 22712
+06:43 finished s0/teacher_k8 exit 0
+07:00 finished s0/nearest_k8 exit 0
+07:30 finished s0/random_k4 exit 0
+07:31 all done
