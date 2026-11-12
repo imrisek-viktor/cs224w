@@ -1,0 +1,22 @@
+{
+  "data": "data/md22_AT-AT-CG-CG.npz",
+  "source": "data/md22_AT-AT.npz",
+  "init": "runs/h1/cutoff_rc5/best.pt",
+  "method": "finetune",
+  "freeze": 1,
+  "ntrain": 500,
+  "nval": 500,
+  "steps": 8000,
+  "eval_every": 0,
+  "warmup": 0.02,
+  "lr": 0.0005,
+  "bs": 16,
+  "wE": 1.0,
+  "wF": 1.0,
+  "clip": 1000.0,
+  "rc": 5.0,
+  "seed": 1,
+  "device": "mps",
+  "threads": 2,
+  "out": "runs/transfer/finetune_n500_s1"
+}

@@ -1,0 +1,2 @@
+step,time_s,lr,train_loss,val_f_mae,val_e_mae
+0,3.0,0.0005,0.0,8.116327275335452,16.897838333129883
