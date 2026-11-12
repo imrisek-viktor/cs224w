@@ -1,0 +1,22 @@
+{
+  "data": "data/md22_AT-AT-CG-CG.npz",
+  "source": "data/md22_AT-AT.npz",
+  "init": "runs/h1/cutoff_rc5/best.pt",
+  "method": "zeroshot",
+  "freeze": 1,
+  "ntrain": 2000,
+  "nval": 500,
+  "steps": 0,
+  "eval_every": 0,
+  "warmup": 0.02,
+  "lr": 0.0005,
+  "bs": 16,
+  "wE": 1.0,
+  "wF": 1.0,
+  "clip": 1000.0,
+  "rc": 5.0,
+  "seed": 0,
+  "device": "mps",
+  "threads": 2,
+  "out": "runs/transfer/zeroshot_n2000_s0"
+}
