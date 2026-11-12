@@ -218,6 +218,7 @@ def main():
     ap.add_argument("--ntrain", type=int, default=3000)
     ap.add_argument("--nval", type=int, default=500)
     ap.add_argument("--ntest", type=int, default=5000)
+    ap.add_argument("--split", default=None, help="data/<name>_split.npz (blocked split); default: random split")
     ap.add_argument("--bs", type=int, default=16)
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--wE", type=float, default=1.0, help="weight on per-atom energy MSE")
@@ -250,10 +251,14 @@ def main():
     dev = torch.device(a.device)
 
     D = np.load(a.data)
-    rng = np.random.default_rng(1234)  # split fixed across seeds/modes
-    perm = rng.permutation(len(D["E"]))
-    tr, va = perm[:a.ntrain], perm[a.ntrain:a.ntrain + a.nval]
-    te = perm[a.ntrain + a.nval:a.ntrain + a.nval + a.ntest]
+    if a.split:  # blocked split from src/make_split.py (ntrain/nval/ntest are taken from the file)
+        S = np.load(a.split)
+        tr, va, te = S["tr"], S["va"], S["te"]
+    else:
+        rng = np.random.default_rng(1234)  # split fixed across seeds/modes
+        perm = rng.permutation(len(D["E"]))
+        tr, va = perm[:a.ntrain], perm[a.ntrain:a.ntrain + a.nval]
+        te = perm[a.ntrain + a.nval:a.ntrain + a.nval + a.ntest]
     z = torch.tensor(D["z"], device=dev)
     R = torch.tensor(D["R"], device=dev)
     Fr = torch.tensor(D["F"], device=dev)

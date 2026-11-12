@@ -65,6 +65,7 @@ def main():
     ap.add_argument("--teacher", required=True)
     ap.add_argument("--student", default=None, help="optional; without it the gap ranking is skipped")
     ap.add_argument("--ntrain", type=int, default=3000, help="must match the runs' training split")
+    ap.add_argument("--split", default=None, help="blocked split file (overrides --ntrain)")
     ap.add_argument("--nconf", type=int, default=200, help="training configurations to average over")
     ap.add_argument("--pool", type=float, nargs=2, default=[3.0, 5.0], help="candidate median-distance range")
     ap.add_argument("--budgets", type=float, nargs="+", default=[2, 4, 8])
@@ -75,7 +76,10 @@ def main():
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
 
     D = np.load(a.data)
-    tr = np.random.default_rng(1234).permutation(len(D["E"]))[:a.ntrain]  # same split as train.py
+    if a.split:
+        tr = np.load(a.split)["tr"]
+    else:
+        tr = np.random.default_rng(1234).permutation(len(D["E"]))[:a.ntrain]  # same split as train.py
     z = torch.tensor(D["z"]); n = len(z)
     conf = D["R"][tr[np.linspace(0, len(tr) - 1, a.nconf).astype(int)]]
     dmed = np.median(np.linalg.norm(conf[:, :, None] - conf[:, None], axis=-1), axis=0)
@@ -113,6 +117,9 @@ def main():
             ib = f"{inter[sel].mean():.0%}" if inter is not None else "-"
             print(f"{meth:8s} {k:6g}  {K:5d}  {dmed[iu][cand[sel]].mean():7.2f} Å  {ib:>10s}  "
                   f"{len(near & set(sel)) / K:18.0%}  {cov:25.0%}")
+    allp = np.stack([iu[0][cand], iu[1][cand]], 1)
+    np.save(out / "pairs_all.npy", allp)  # control: every candidate pair (the full teacher shell)
+    print(f"all      {2 * len(cand) / n:6.3g}  {len(cand):5d}  (pairs_all.npy)")
     print("wrote", out)
 
 

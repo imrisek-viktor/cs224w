@@ -78,7 +78,18 @@ a third of test frames have a near-duplicate in training: forces 92% correlated,
 - It matters most for generalization-type claims: transfer AT-AT → AT-AT-CG-CG, and whether a
   selected graph learned something general rather than memorized the trajectory.
 
-**Proposed split: blocked, with gaps.**
+**Implemented (Nov 11): `src/make_split.py` → `data/md22_<name>_split.npz`, used with `--split` in
+`train.py` and `edge_select.py`.**
+- 20 blocks, roles `TTXTVTTXTTTTXTVTTXTT` (T train, V val, X test).
+- 50 frames are dropped on *both* sides of every boundary, so every val/test frame is ≥ 101 steps
+  from any training frame (checked).
+- AT-AT: 3000 train of 13,401 available, 500 val, 3600 test.
+- AT-AT-CG-CG: 2000 train of 6,508, 500 val, 1630 test.
+
+A full rerun of the edge-budget sweep on this split, with teachers retrained on it, is in progress
+(`runs/edges_blocked.py`, results in `runs/edges_blocked/`). It also includes an "all pairs" control.
+
+**Design (as proposed): blocked, with gaps.**
 1. Cut the trajectory into B ≈ 20 contiguous blocks of equal length (AT-AT: ~1000 frames each).
 2. Assign whole blocks to train / validation / test (e.g. 14 / 2 / 4), spread over the trajectory
    (e.g. a fixed shuffled block order, or every 5th block to test), so all three sets cover early and

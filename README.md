@@ -4,7 +4,7 @@ CS224W project, Viktor Imrisek and Emiyare Ikwut-Ukwa.
 
 > **⚠️ Warning:** results so far use a random frame split of a single MD trajectory, so test frames sit
 > 2–3 steps from training frames and absolute errors are optimistic. A blocked split with gaps is
-> proposed in WRITEUP.md §1.1 (`src/split_check.py` reproduces the numbers).
+> now implemented (`src/make_split.py`, WRITEUP.md §1.1) and a rerun on it is in progress. `src/split_check.py` reproduces the leak numbers.
 
 **Start with [WRITEUP.md](WRITEUP.md)** for the experiments so far, the results, and the proposed
 direction (transfer from AT-AT to AT-AT-CG-CG). The original proposal is `CS224W_project__2_.pdf`.
@@ -21,10 +21,12 @@ src/zeroshot.py          AT-AT model evaluated on AT-AT-CG-CG, errors per nucleo
 src/edge_select.py       influence (||dF_i/dr_j||) of teacher/student models -> ranked extra-edge lists
 src/influence_explore.py exploratory influence-by-distance analysis on AT-AT-CG-CG
 src/split_check.py       how close test frames are to training frames under the random split
+src/make_split.py        blocked train/val/test split with gaps -> data/md22_<name>_split.npz (train.py --split)
 src/plot_edges.py        validation curves for an edge-budget sweep (<root>/val_curves.png)
 src/plot_cost.py         AT-AT-CG-CG accuracy vs time per epoch (runs/edges_atcg/cost_vs_error.png)
 runs/edges_atat.py       job queue for the AT-AT edge-budget sweep (outputs in runs/edges_atat/)
 runs/edges_atcg.py       job queue for the AT-AT-CG-CG edge-budget sweep (outputs in runs/edges_atcg/)
+runs/edges_blocked.py    rerun of both sweeps on the blocked split, teachers included (runs/edges_blocked/)
 data/edges/<molecule>/   influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
 runs/*.sh                launch scripts for the experiments
 runs/h1, runs/h2         AT-AT headroom experiments
