@@ -28,6 +28,11 @@ runs/edges_atat.py       job queue for the AT-AT edge-budget sweep (outputs in r
 runs/edges_atcg.py       job queue for the AT-AT-CG-CG edge-budget sweep (outputs in runs/edges_atcg/)
 runs/edges_blocked.py    rerun of both sweeps on the blocked split, teachers included (runs/edges_blocked/)
 data/edges/<molecule>/   influence matrices + selected edge lists (pairs_<method>_k<budget>.npy)
+src/transfer.py          transfer AT-AT -> AT-AT-CG-CG: one scratch / finetune / frozen / zeroshot run at N labels
+src/blocked_split.py     blocked split used by the transfer runs -> data/md22_AT-AT-CG-CG_split_transfer.npz
+                         (a different block layout from src/make_split.py; to be rerun on that split)
+src/summarize_transfer.py tables + error-vs-N figure for runs/transfer
+runs/transfer_sweep.py   job queue for the transfer sweep (outputs in runs/transfer/, results in RESULTS.md)
 runs/*.sh                launch scripts for the experiments
 runs/h1, runs/h2         AT-AT headroom experiments
 runs/atcg1               AT-AT-CG-CG headroom + gates (before the distance-encoding fix)
